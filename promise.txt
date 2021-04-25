@@ -1,0 +1,108 @@
+异步操作：fs文件操作，ajax,定时器，数据库操作。
+1.promise是es6针对异步操作的一种新的解决方案，旧的解决方案是回调函数。
+特点：1.promise支持链式调用，解决回调地狱的问题。
+        回调地狱：a(a1){
+                    b(a2){
+                        c(a3){
+                            d(a4){
+
+                                    }
+                                }
+                            }
+        }
+        代码不便于阅读和维护。
+
+let a=new Promise((resolve,reject)=>{
+    return resolve();
+    return reject();
+})
+a.then(()=>{}//resolve,()=>{}//reject)//then()方法返回一个新的promise对象。
+
+node中util.promisfy()接受一个（err,data）=>{}并返回一个promise对象。作用是改变回调函数的模式为promise的模式。凡是（err,data）=>{}的回调都可以使用。
+const util=require('util');
+let as=util.promisify(fs.readFile);
+as('./promise.txt').then((value)=>{console.log(value.toString())},(err)=>{console.log(err)})
+
+Promise的状态，pending->resolve;pending->reject;只有这两种状态。默认是pending状态。
+实例化的promise有两个属性：promiseStatus和promiseResult.
+promiseStatus保存当前promise的状态。
+promiseResult保存着promise对象成功或者失败的结果。这个结果只能由resolve和reject来修改。
+
+
+
+let p=new Promise(
+    (resolve,reject)=>{
+        consol.log("1");
+        //同步调用，不会存入到队列中。立即执行函数内的内容。
+    }
+    )
+    console.log("2");
+    //输出：1，2
+
+    Promise.resolve();构造函数Promise的方法。
+    Promise.reject();也是构造函数的方法，不是实例对象的方法。不论传入参数是什么，返回结果都是一个失败的Promise对象。
+    let p=promise.resolve(521);返回一个成功状态的Promise对象。如果参数是一个非Promise对象，则返回一个成功的Promise，如果参数是一个promise对象,则参数的结果决定resolve的结果。
+
+    promise.all([]);数组是多个promise对象，所有promise对象都为成功，则返回一个成功的promise,结果是多个promise的结果组成的一个数组。此外，返回失败的promise对象。
+    promise.race([]);返回一个新的promise,数组中哪个promsie的状态先改变就是返回的promise的状态。
+
+
+    代码中怎么改变Promise的状态？：1.调用resolve(),reject(),
+                                2. 抛出错误：throw "err";
+
+    可以使用多个p.then()方法指定Promise成功/失败的回调吗？：yes。then（）方法返回的也是一个回调函数，
+
+    Promise的状态的改变和回调函数的指定（then方法的指定）的顺序是固定的吗？：no 。如果状态的改变延迟执行了，那么（回调函数的指定（不是执行哟））先于状态的改变。
+
+    then()方法返回的promise对象的状态是什么？：由回调函数的返回值决定，返回非Promise对象则then的状态为resolve;返回promise对象，则由该promise的状态决定。
+
+    如何串联多个任务？：
+    then（）链式调用。
+    let a=new Promise((resolve,reject)+>{
+        resolve("a");
+    })
+    a.then((value)=?{
+        return new Promise(resolve,reject)=>{
+            resolve("b");
+        }
+    }).then((value)=>{
+        console.log(value);
+    })
+
+
+    异常穿透;在使用多个then（）方法进行多任务操作时，失败的状态的回调函数可以写在所有then()的最后。
+    中断then()方法的链式调用：返回一个pending状态的Pormise。
+ 
+
+ let a=new Promise((resolve ,reject)=>{
+console.log("111");
+ })
+
+ a.then((value)=>{
+     console.log("222");
+ })
+ console.log("333");
+ 执行结果为：111，333，222.构造函数内的语句是同步执行的。then()方法是异步执行的。
+
+
+ async:
+ 1.aynsc 标记的函数的返回值是一个Promise对象。
+ 2.这个Promise对象的结果由这个函数的return决定。如果返回一个非Promise对象，则这个promise对象的状态为成功。如果函数返回的是个Promise对象，则由这个返回的
+ promise对象的状态和结果决定这个返回的promise对象的结果和状态。
+ aysnc function main(){
+     return "1";
+ }
+ main();//main就是一个成功的结果为“1“的promise对象。
+ aynsc function main(){
+     return new Promise((resolve,reject)=>{
+         reject('no');
+     })
+ } 
+ main()//main就是一个失败的结果为no的Promise对象。
+
+ await:
+ 1.await右侧一般是promise对象，但也可以是其他的类型（数字，字符串）
+ 2.如果右侧为promise对象，await返回的是promise成功的值。    
+ 3.如果为其他类型的值，则直接返回该值作为await的返回值。
+ 4.await必须写在aynsc函数中，但aynsc中可以没有await
+ 5.如果await的promise失败了，就会抛出异常，需要通过try-catch捕获处理。
